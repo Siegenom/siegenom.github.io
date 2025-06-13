@@ -1,0 +1,20 @@
+backend:
+  name: github
+  repo: Siegenom/siegenom.github.io
+  branch: main
+  auth_type: pkce
+
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: "blog"
+    label: "ブログ記事"
+    folder: "src/content/blog"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "タイトル", name: "title", widget: "string" }
+      - { label: "公開日", name: "pubDate", widget: "datetime" }
+      - { label: "概要", name: "description", widget: "string" }
+      - { label: "本文", name: "body", widget: "markdown" }
