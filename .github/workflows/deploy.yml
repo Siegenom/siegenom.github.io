@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - main 
+      - main
 
 jobs:
   build:
@@ -13,21 +13,18 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # Astroが推奨するNode.jsのバージョン
-          cache: 'npm' # npmキャッシュを有効化
+          node-version: 20
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install # プロジェクトの依存関係をインストール
+        run: npm install
 
       - name: Build Astro project
-        run: npm run build # Astroプロジェクトをビルド (package.jsonのbuildスクリプトを実行)
+        run: npm run build
 
-      # ★ここから大きく変更します！peaceiris/actions-gh-pages@v3 を使います
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3 # GitHub Pagesにデプロイする実績のあるアクション
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }} # GitHubが提供するトークン
-          publish_dir: ./dist # Astroのビルド出力ディレクトリ (通常は dist)
-         force_orphan: true
-          # publish_branch: gh-pages # デフォルトで gh-pages にデプロイされるため、通常は明示不要
-                                  # しかし、念のため明示しておきます。
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true
