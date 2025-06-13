@@ -19,4 +19,4 @@ jobs:
           package-manager: npm
           # ★この1行を正確に追加または確認します。
           #   Astroのビルド成果物があるディレクトリを指定します。
-          publish_dir: ./dist
+   
