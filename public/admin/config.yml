@@ -1,11 +1,19 @@
 backend:
-CMSの裏側（保存先）の設定です。
-repo: Siegenom/siegenom.github.io で、あなたのGitHubリポジトリを指定しています。
-branch: main で、mainブランチに保存することを指示しています。
-media_folder:
-今後、管理画面から画像をアップロードしたときに、その画像が保存されるフォルダを指定します。
+  name: github
+  repo: Siegenom/siegenom.github.io
+  branch: main
+
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
 collections:
-管理するコンテンツのグループ設定です。今回は「ブログ記事」のグループを一つだけ作ります。
-label: "ブログ記事": 管理画面に表示されるメニュー名です。
-folder: "src/content/blog": （重要） 作成した記事のMarkdownファイルが保存される場所です。Astroの標準的なブログ記事の置き場所に合わせています。
-fields:: 記事を作成するときの入力項目です。「タイトル」「公開日」「概要」「本文」の4つの入力欄が表示されるようになります。
+  - name: "blog"
+    label: "ブログ記事"
+    folder: "src/content/blog"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "タイトル", name: "title", widget: "string" }
+      - { label: "公開日", name: "pubDate", widget: "datetime" }
+      - { label: "概要", name: "description", widget: "string" }
+      - { label: "本文", name: "body", widget: "markdown" }
