@@ -28,5 +28,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }} # GitHubが提供するトークン
           publish_dir: ./dist # Astroのビルド出力ディレクトリ (通常は dist)
+         force_orphan: true
           # publish_branch: gh-pages # デフォルトで gh-pages にデプロイされるため、通常は明示不要
                                   # しかし、念のため明示しておきます。
