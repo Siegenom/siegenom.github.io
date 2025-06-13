@@ -30,8 +30,3 @@ jobs:
           publish_dir: ./dist # Astroのビルド出力ディレクトリ (通常は dist)
           # publish_branch: gh-pages # デフォルトで gh-pages にデプロイされるため、通常は明示不要
                                   # しかし、念のため明示しておきます。
-
-* **変更点**:
-    * `uses: withastro/action@v2` を `uses: peaceiris/actions-gh-pages@v3` に変更します。
-    * `with:` の下のオプションも、`peaceiris/actions-gh-pages@v3` に合わせて変更します。`github_token` と `publish_dir` が重要です。
-    * `Set up Node.js` ステップと `Install dependencies` ステップは、`peaceiris` アクションを使う場合に必要です。
