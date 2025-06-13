@@ -4,8 +4,40 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>コンテンツ管理</title>
-<link href="/admin/config.txt" rel="cms-config-url"></head>
+  </head>
 <body>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <script>
+    // Decap CMSの設定をここに直接記述
+    var config = {
+      backend: {
+        name: "github",
+        repo: "Siegenom/siegenom.github.io",
+        branch: "main",
+        auth_type: "pkce"
+      },
+      media_folder: "public/uploads",
+      public_folder: "/uploads",
+      collections: [
+        {
+          name: "blog",
+          label: "ブログ記事",
+          folder: "src/content/blog",
+          create: true,
+          slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
+          fields: [
+            { label: "タイトル", name: "title", widget: "string" },
+            { label: "公開日", name: "pubDate", widget: "datetime" },
+            { label: "概要", name: "description", widget: "string" },
+            { label: "本文", name: "body", widget: "markdown" }
+          ]
+        }
+      ]
+    };
+
+    // Decap CMSを初期化
+    // config オブジェクトを直接渡します
+    CMS.init({ config: config });
+  </script>
 </body>
 </html>
