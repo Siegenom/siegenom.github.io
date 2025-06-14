@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>コンテンツ管理</title>
 </head>
-
-<!-- ...既存のコード... -->
+<body>
   <script src="https://unpkg.com/decap-cms@3.1.8/dist/decap-cms.js"></script>
   <script>
     // 主要なリクエストを監視してデバッグ出力
@@ -37,7 +36,7 @@
       };
     })();
 
-       // 1. localStorage/sessionStorageの内容を出力
+    // 1. localStorage/sessionStorageの内容を出力
     console.log('[DecapCMS Debug] localStorage:', JSON.stringify(localStorage, null, 2));
     console.log('[DecapCMS Debug] sessionStorage:', JSON.stringify(sessionStorage, null, 2));
 
@@ -51,14 +50,9 @@
     console.error = function() {
       origConsoleError.apply(console, arguments);
       try {
-        // 追加でエラー内容を明示的に出力
         document.body.insertAdjacentHTML('beforeend', '<pre style="color:red;background:#fff;">[DecapCMS Debug] console.error: ' + Array.from(arguments).join(' ') + '</pre>');
       } catch(e) {}
     };
-    
   </script>
-
-<body>
-  <script src="https://unpkg.com/decap-cms@3.1.8/dist/decap-cms.js"></script>
 </body>
 </html>
