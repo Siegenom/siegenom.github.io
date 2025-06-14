@@ -1,20 +1,18 @@
 backend:
   name: github
-  repo: Siegenom/siegenom.github.io
+  repo: siegenom/siegenom.github.io
   branch: main
   auth_type: pkce
 
-media_folder: "public/uploads"
+media_folder: "uploads"
 public_folder: "/uploads"
 
 collections:
-  - name: "blog"
-    label: "Blog Posts"
-    folder: "src/content/blog"
+  - name: "test"
+    label: "Test"
+    folder: "src/content/test"
     create: true
-    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    slug: "{{slug}}"
     fields:
       - { label: "Title", name: "title", widget: "string" }
-      - { label: "Publish Date", name: "pubDate", widget: "datetime" }
-      - { label: "Description", name: "description", widget: "string" }
       - { label: "Body", name: "body", widget: "markdown" }
