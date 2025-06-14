@@ -5,6 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>コンテンツ管理</title>
 </head>
+
+<!-- ...既存のコード... -->
+  <script src="https://unpkg.com/decap-cms@3.1.8/dist/decap-cms.js"></script>
+  <script>
+    // 主要なリクエストを監視してデバッグ出力
+    (function() {
+      const origOpen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function(method, url) {
+        if (
+          url.includes('config.yml') ||
+          url.includes('api.github.com') ||
+          url.includes('api.netlify.com')
+        ) {
+          console.log('[DecapCMS Debug] ' + method + ' ' + url);
+        }
+        return origOpen.apply(this, arguments);
+      };
+      const origFetch = window.fetch;
+      window.fetch = function() {
+        const url = arguments[0];
+        if (
+          typeof url === 'string' &&
+          (url.includes('config.yml') ||
+           url.includes('api.github.com') ||
+           url.includes('api.netlify.com'))
+        ) {
+          console.log('[DecapCMS Debug] fetch ' + url);
+        }
+        return origFetch.apply(this, arguments);
+      };
+    })();
+  </script>
+
 <body>
   <script src="https://unpkg.com/decap-cms@3.1.8/dist/decap-cms.js"></script>
 </body>
