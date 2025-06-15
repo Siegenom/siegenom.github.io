@@ -1,5 +1,6 @@
 ---
-// Astro Component
+// このファイルは src/pages/admin/index.astro です
+// Netlify CMS の管理画面を初期化するための Astro コンポーネントです
 ---
 <!doctype html>
 <html>
@@ -48,24 +49,71 @@
         log('❌ [NG] <div id="nc-root"></div> が見つかりません！', 'error');
       }
 
-      // 2. config.ymlのフェッチ試行
-      log('config.yml の読み込みを試行します...');
-      fetch('/admin/config.yml')
-        .then(response => {
-          log(`config.yml のレスポンスステータス: ${response.status}`);
-          if (response.ok) {
-            log('✅ [OK] /admin/config.yml の読み込みに成功しました。', 'success');
-            log('🎉 全てのチェックが完了しました。Netlify CMSが起動します。');
-            // 成功したら3秒後にデバッグパネルを消す
-            setTimeout(() => { panel.style.display = 'none'; }, 3000);
-          } else {
-            log(`❌ [NG] /admin/config.yml の読み込みに失敗しました (HTTP ${response.status})。`, 'error');
-            log('解決策: config.ymlが "public/admin/" ディレクトリに正しく配置されているか確認してください。', 'info');
-          }
-        })
-        .catch(err => {
-          log(`❌ [NG] config.yml の読み込み中にネットワークエラーが発生しました: ${err}`, 'error');
-        });
+      // **ここから追加・修正するコード**
+      log('Netlify CMS の手動初期化を試行します...');
+      // Netlify CMS を手動で初期化し、config.yml のパスを明示的に指定
+      // Netlify CMS の初期化は `CMS.init()` または `NetlifyCms.init()` を使用
+      // https://www.decapcms.org/docs/beta-features/#manual-initialization
+      try {
+        if (window.CMS) { // Netlify CMS v2系では CMS がグローバルにあることが多い
+          window.CMS.init({
+            config: {
+              load_config_file: false, // config.yml の自動ロードを無効化
+              backend: { // config.yml からの内容をここに直接記述
+                name: 'github',
+                repo: 'siegenom/siegenom.github.io',
+                branch: 'main',
+                auth_type: 'implicit',
+                app_id: 'Ov23liaITErivL1rF7bJ' // ユーザー様のGitHub OAuth App Client ID
+              },
+              media_folder: "public/images/blog",
+              public_folder: "/images/blog",
+              collections: [
+                {
+                  name: "blog",
+                  label: "ブログ記事",
+                  folder: "src/content/blog",
+                  create: true,
+                  slug: "{{year}}-{{month}}-{{day}}-{{slug}}",
+                  fields: [
+                    {label: "タイトル", name: "title", widget: "string"},
+                    {label: "説明", name: "description", widget: "string"},
+                    {label: "投稿日", name: "pubDate", widget: "datetime"},
+                    {label: "更新日", name: "updatedDate", widget: "datetime", required: false},
+                    {label: "ヒーロー画像", name: "heroImage", widget: "image", required: false},
+                    {label: "記事内容", name: "body", widget: "markdown"}
+                  ]
+                }
+              ]
+            }
+          });
+          log('✅ [OK] Netlify CMS を手動で初期化しました。', 'success');
+          log('🎉 全てのチェックが完了しました。Netlify CMSが起動します。');
+          setTimeout(() => { panel.style.display = 'none'; }, 3000);
+        } else {
+          log('❌ [NG] `window.CMS` オブジェクトが見つかりません。Netlify CMS スクリプトが正しく読み込まれていない可能性があります。', 'error');
+        }
+      } catch (e) {
+        log(`❌ [NG] Netlify CMS の初期化中にエラーが発生しました: ${e.message}`, 'error');
+        log('解決策: config.yml の設定内容を確認してください。', 'info');
+      }
+      // **config.ymlのフェッチ試行 (元のコード) は削除します**
+      // log('config.yml の読み込みを試行します...'); // この行から下を削除
+      // fetch('/admin/config.yml')
+      //   .then(response => {
+      //     log(`config.yml のレスポンスステータス: ${response.status}`);
+      //     if (response.ok) {
+      //       log('✅ [OK] /admin/config.yml の読み込みに成功しました。', 'success');
+      //       log('🎉 全てのチェックが完了しました。Netlify CMSが起動します。');
+      //       setTimeout(() => { panel.style.display = 'none'; }, 3000);
+      //     } else {
+      //       log(`❌ [NG] /admin/config.yml の読み込みに失敗しました (HTTP ${response.status})。`, 'error');
+      //       log('解決策: config.ymlが "public/admin/" ディレクトリに正しく配置されているか確認してください。', 'info');
+      //     }
+      //   })
+      //   .catch(err => {
+      //     log(`❌ [NG] config.yml の読み込み中にネットワークエラーが発生しました: ${err}`, 'error');
+      //   });
     });
   </script>
 </body>
