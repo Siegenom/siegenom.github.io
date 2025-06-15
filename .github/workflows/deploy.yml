@@ -13,15 +13,17 @@ jobs:
       contents: write # gh-pages ブランチへの書き込み権限を付与
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout Repository with Full History
+        uses: actions/checkout@v4 # 明示的にv4を指定
         with:
-          fetch-depth: 0 # gh-pages へデプロイするために完全な履歴が必要な場合
+          fetch-depth: 0 # 完全な履歴をクローン
+          # clean: true # デフォルトでtrueだが念のため明示 (もしあれば古いファイル削除)
+          # persist-credentials: false # もしcredentialsキャッシュが原因なら無効化（稀）
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # またはプロジェクトで使用しているNode.jsのバージョン
+          node-version: '20'
 
       - name: Install dependencies
         run: npm install
@@ -37,9 +39,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          force_orphan: true # この行は既に設定済みのはずです
-          # cname: example.com # カスタムドメインを使用する場合
-          # ここに他の設定（例: exclude）を追加できます
+          force_orphan: true
 
       - name: Debug Deployment
         run: |
@@ -48,13 +48,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin gh-pages
           git checkout gh-pages
-          git pull origin gh-pages # リモートのgh-pagesを確実にプル
+          git pull origin gh-pages
           echo "Latest commit on gh-pages:"
           git log -1 --pretty=fuller
           echo "--- Listing files in current directory (gh-pages) ---"
           ls -lha
           echo "--- Listing contents of index.html on gh-pages ---"
-          cat index.html | head -n 20 # index.htmlの最初の20行を表示
+          cat index.html | head -n 20
           echo "--- Listing files in dist directory (should be deployed) ---"
           ls -lha ./dist
           echo "--- Comparing checksums of deployed index.html and built index.html ---"
@@ -62,7 +62,7 @@ jobs:
           echo "--- End Debug Info ---"
         continue-on-error: true
 
-      - name: Display Astro Config and Debug File Presence # ← このステップ名も変更
+      - name: Display Astro Config and Debug File Presence
         run: |
           echo "--- Current Working Directory ---"
           pwd
