@@ -16,12 +16,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # gh-pages へデプロイするために完全な履歴が必要な場合
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # またはプロジェクトで使用しているNode.jsのバージョン
+          node-version: '20'
 
       - name: Install dependencies
         run: npm install
@@ -37,9 +37,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          force_orphan: true # この行は既に設定済みのはずです
-          # cname: example.com # カスタムドメインを使用する場合
-          # ここに他の設定（例: exclude）を追加できます
+          force_orphan: true
 
       - name: Debug Deployment
         run: |
@@ -48,21 +46,29 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin gh-pages
           git checkout gh-pages
-          git pull origin gh-pages # リモートのgh-pagesを確実にプル
+          git pull origin gh-pages
           echo "Latest commit on gh-pages:"
           git log -1 --pretty=fuller
           echo "--- Listing files in current directory (gh-pages) ---"
           ls -lha
           echo "--- Listing contents of index.html on gh-pages ---"
-          cat index.html | head -n 20 # index.htmlの最初の20行を表示
+          cat index.html | head -n 20
           echo "--- Listing files in dist directory (should be deployed) ---"
           ls -lha ./dist
           echo "--- Comparing checksums of deployed index.html and built index.html ---"
-          # 注意: peaceiris/actions-gh-pages は内部的に別の場所にデプロイするため、
-          # ここで直接distとgh-pagesのファイルを比較するのは難しい場合があります。
-          # 代わりに、gh-pages上のindex.htmlが適切かを確認します。
-          echo "SHA256 of index.html on gh-pages branch:"
           sha256sum index.html || true
           echo "--- End Debug Info ---"
-        # 失敗してもデバッグログは取得したいので continue-on-error を設定
+        continue-on-error: true
+
+      - name: Display Astro Config # ← この新しいステップを追加
+        run: |
+          echo "--- Contents of astro.config.mjs (or .ts) ---"
+          if [ -f astro.config.mjs ]; then
+            cat astro.config.mjs
+          elif [ -f astro.config.ts ]; then
+            cat astro.config.ts
+          else
+            echo "Astro config file not found (astro.config.mjs or astro.config.ts)."
+          fi
+          echo "--- End Astro Config ---"
         continue-on-error: true
