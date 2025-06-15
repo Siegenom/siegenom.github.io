@@ -47,6 +47,131 @@ jobs:
             fi
           done
           echo "--- End Deep Initial Debug ---"
+        continue-on-error: truename: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Manual Git Clone and Deep Initial Debug
+        run: |
+          echo "--- Starting Manual Git Clone ---"
+          # エラー修正: --depth 0 は無効。完全クローンには depth を指定しないか、または --depth 1 を使用。
+          # 今回の修正点: --depth 1 に修正
+          git clone --depth 1 https://github.com/${{ github.repository }}.git .
+          echo "--- Git Clone Completed ---"
+
+          echo "--- Environment Variables related to Paths ---"
+          env | grep -E "PATH|HOME|PWD"
+
+          echo "--- Current Working Directory (Physical Path) ---"
+          pwd -P
+
+          echo "--- List All Contents of Current Directory (Recursive, Hidden Files) ---"
+          ls -lhaR ./
+
+          echo "--- Git Repository Status in CI Environment ---"
+          git status
+          echo "--- Git Tracked Files (Verbose) ---"
+          git ls-files -v
+
+          echo "--- Check Critical Project Files ---"
+          CRITICAL_FILES=("package.json" "astro.config.mjs" ".gitignore" "src/pages/index.astro")
+          for FILE in "${CRITICAL_FILES[@]}"; do
+            echo ""
+            echo "Checking file: $FILE"
+            if [ -f "$FILE" ]; then
+              echo "$FILE found. Details:"
+              ls -lha "$FILE"
+              echo "First 20 lines of $FILE:"
+              head -n 20 "$FILE"
+              echo "SHA256 checksum of $FILE:"
+              sha256sum "$FILE" || true
+            else
+              echo "$FILE NOT found."
+              echo "Searching for $FILE recursively from root:"
+              find . -name "$(basename "$FILE")" -print -exec ls -lha {} \; || true
+            fi
+          done
+
+          echo "--- End Deep Initial Debug ---"
+        continue-on-error: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./
+
+      - name: Build
+        run: npm run build
+        working-directory: ./
+
+      - name: List built files
+        run: ls -R ./dist
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true
+
+      - name: Debug Deployment
+        run: |
+          echo "--- Current Git status on gh-pages branch after deploy ---"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin gh-pages
+          git checkout gh-pages
+          git pull origin gh-pages
+          echo "Latest commit on gh-pages:"
+          git log -1 --pretty=fuller
+          echo "--- Listing files in current directory (gh-pages) ---"
+          ls -lha
+          echo "--- Listing contents of index.html on gh-pages ---"
+          cat index.html | head -n 20
+          echo "--- Listing files in dist directory (should be deployed) ---"
+          ls -lha ./dist
+          echo "--- Comparing checksums of deployed index.html and built index.html ---"
+          sha256sum index.html || true
+          echo "--- End Debug Info ---"
+        continue-on-error: true
+
+      - name: Display Astro Config and Debug File Presence
+        run: |
+          echo "--- Current Working Directory ---"
+          pwd
+          echo "--- List Root Directory Contents ---"
+          ls -lha ./
+          echo "--- Check for astro.config.mjs in root ---"
+          if [ -f astro.config.mjs ]; then
+            echo "astro.config.mjs found in root."
+            echo "--- Contents of astro.config.mjs ---"
+            cat astro.config.mjs
+          else
+            echo "astro.config.mjs NOT found in root."
+            echo "--- Search for astro.config.mjs recursively ---"
+            find . -name "$(basename "$FILE")" -print -exec ls -lha {} \; || true
+            if [ -f .gitignore ]; then
+              cat .gitignore | grep -i "astro.config.mjs" || echo ".gitignore does not contain astro.config.mjs explicitly."
+            else
+              echo ".gitignore file not found."
+            fi
+          fi
+          echo "--- End Astro Config Debug ---"
         continue-on-error: true
 
       - name: Setup Node.js
