@@ -10,27 +10,34 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: write # gh-pages ブランチへの書き込み権限を付与
 
     steps:
-      - name: Manual Git Clone and Deep Initial Debug
+      - name: Manual Git Clone and Deep Initial Debug # ステップ名を変更
         run: |
           echo "--- Starting Manual Git Clone ---"
-          git clone --depth 1 https://github.com/<span class="math-inline">\{\{ github\.repository \}\}\.git \.
-echo "\-\-\- Git Clone Completed \-\-\-"
-echo "\-\-\- Environment Variables related to Paths \-\-\-"
-env \| grep \-E "PATH\|HOME\|PWD" \# 環境変数の一部をフィルターして表示
-echo "\-\-\- Current Working Directory \(Physical Path\) \-\-\-"
-pwd \-P \# 現在の物理パスを表示
-echo "\-\-\- List All Contents of Current Directory \(Recursive, Hidden Files\) \-\-\-"
-ls \-lhaR \./ \# ルートディレクトリから再帰的に全てのファイルとディレクトリをリスト
-echo "\-\-\- Git Repository Status in CI Environment \-\-\-"
-git status \# Gitリポジトリの現在の状態
-echo "\-\-\- Git Tracked Files \(Verbose\) \-\-\-"
-git ls\-files \-v \# Gitが追跡しているファイルの詳細リスト
-echo "\-\-\- Check Critical Project Files \-\-\-"
-CRITICAL\_FILES\=\("package\.json" "astro\.config\.mjs" "\.gitignore" "src/pages/index\.astro"\)
-for FILE in "</span>{CRITICAL_FILES[@]}"; do
+          # Git clone コマンドのエラー修正: --depth 0 は無効。
+          # --depth 1 で最新のコミットのみをクローンします。
+          git clone --depth 1 https://github.com/${{ github.repository }}.git .
+          echo "--- Git Clone Completed ---"
+
+          echo "--- Environment Variables related to Paths ---"
+          env | grep -E "PATH|HOME|PWD" # 環境変数の一部をフィルターして表示
+
+          echo "--- Current Working Directory (Physical Path) ---"
+          pwd -P # 現在の物理パスを表示
+
+          echo "--- List All Contents of Current Directory (Recursive, Hidden Files) ---"
+          ls -lhaR ./ # ルートディレクトリから再帰的に全てのファイルとディレクトリをリスト
+
+          echo "--- Git Repository Status in CI Environment ---"
+          git status # Gitリポジトリの現在の状態
+          echo "--- Git Tracked Files (Verbose) ---"
+          git ls-files -v # Gitが追跡しているファイルの詳細リスト
+
+          echo "--- Check Critical Project Files ---"
+          CRITICAL_FILES=("package.json" "astro.config.mjs" ".gitignore" "src/pages/index.astro")
+          for FILE in "${CRITICAL_FILES[@]}"; do
             echo ""
             echo "Checking file: $FILE"
             if [ -f "$FILE" ]; then
@@ -42,13 +49,12 @@ for FILE in "</span>{CRITICAL_FILES[@]}"; do
               sha256sum "$FILE" || true # SHA256ハッシュ
             else
               echo "$FILE NOT found."
-              echo "Searching for <span class="math-inline">FILE recursively from root\:"
-find \. \-name "</span>(basename "$FILE")" -print -exec ls -lha {} \; || true # 見つからない場合に再帰検索
+              echo "Searching for $FILE recursively from root:"
+              find . -name "$(basename "$FILE")" -print -exec ls -lha {} \; || true # 見つからない場合に再帰検索
             fi
           done
-
           echo "--- End Deep Initial Debug ---"
-        continue-on-error: true
+        continue-on-error: true # このステップでエラーが出てもワークフローは続行
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -57,11 +63,11 @@ find \. \-name "</span>(basename "$FILE")" -print -exec ls -lha {} \; || true # 
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./
+        working-directory: ./ # コマンド実行ディレクトリを明示的に指定
 
       - name: Build
         run: npm run build
-        working-directory: ./
+        working-directory: ./ # コマンド実行ディレクトリを明示的に指定
 
       - name: List built files
         run: ls -R ./dist
@@ -87,4 +93,33 @@ find \. \-name "</span>(basename "$FILE")" -print -exec ls -lha {} \; || true # 
           ls -lha
           echo "--- Listing contents of index.html on gh-pages ---"
           cat index.html | head -n 20
-          echo "--- Listing files in dist directory
+          echo "--- Listing files in dist directory (should be deployed) ---"
+          ls -lha ./dist
+          echo "--- Comparing checksums of deployed index.html and built index.html ---"
+          sha256sum index.html || true
+          echo "--- End Debug Info ---"
+        continue-on-error: true
+
+      - name: Display Astro Config and Debug File Presence
+        run: |
+          echo "--- Current Working Directory ---"
+          pwd
+          echo "--- List Root Directory Contents ---"
+          ls -lha ./
+          echo "--- Check for astro.config.mjs in root ---"
+          if [ -f astro.config.mjs ]; then
+            echo "astro.config.mjs found in root."
+            echo "--- Contents of astro.config.mjs ---"
+            cat astro.config.mjs
+          else
+            echo "astro.config.mjs NOT found in root."
+            echo "--- Search for astro.config.mjs recursively ---"
+            find . -name "$(basename "$FILE")" -print -exec ls -lha {} \; || true
+            if [ -f .gitignore ]; then
+              cat .gitignore | grep -i "astro.config.mjs" || echo ".gitignore does not contain astro.config.mjs explicitly."
+            else
+              echo ".gitignore file not found."
+            fi
+          fi
+          echo "--- End Astro Config Debug ---"
+        continue-on-error: true
