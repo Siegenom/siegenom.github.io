@@ -10,16 +10,34 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write # gh-pages ブランチへの書き込み権限を付与
+      contents: write
 
     steps:
-      - name: Checkout Repository with Full History
-        uses: actions/checkout@v4 # 明示的にv4を指定
-        with:
-          fetch-depth: 0 # 完全な履歴をクローン
-          # clean: true # デフォルトでtrueだが念のため明示 (もしあれば古いファイル削除)
-          # persist-credentials: false # もしcredentialsキャッシュが原因なら無効化（稀）
+      - name: Manual Git Clone and Initial File Check # ← ステップ名を変更
+        run: |
+          echo "--- Starting Manual Git Clone ---"
+          git clone --depth 0 https://github.com/${{ github.repository }}.git .
+          echo "--- Git Clone Completed ---"
+          echo "--- List Files Immediately After Clone ---"
+          ls -lha ./
+          echo "--- Check for astro.config.mjs immediately after clone ---"
+          if [ -f astro.config.mjs ]; then
+            echo "astro.config.mjs found immediately after clone."
+            cat astro.config.mjs
+          else
+            echo "astro.config.mjs NOT found immediately after clone."
+          fi
+          echo "--- Check for .gitignore immediately after clone ---"
+          if [ -f .gitignore ]; then
+            echo ".gitignore found immediately after clone."
+            cat .gitignore
+          else
+            echo ".gitignore NOT found immediately after clone."
+          fi
+          echo "--- End Manual Git Clone Check ---"
+        continue-on-error: true
 
+      # 以下、既存のステップを全て残す（Setup Node.jsから最後まで）
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
