@@ -16,25 +16,18 @@ jobs:
       - name: Manual Git Clone and Deep Initial Debug
         run: |
           echo "--- Starting Manual Git Clone ---"
-          # エラー修正: --depth 0 は無効。完全クローンには depth を指定しないか、または --depth 1 を使用。
-          # ここではまずファイル存在確認のため --depth 1 で試行
           git clone --depth 1 https://github.com/${{ github.repository }}.git .
           echo "--- Git Clone Completed ---"
-
           echo "--- Environment Variables related to Paths ---"
           env | grep -E "PATH|HOME|PWD"
-
           echo "--- Current Working Directory (Physical Path) ---"
           pwd -P
-
           echo "--- List All Contents of Current Directory (Recursive, Hidden Files) ---"
           ls -lhaR ./
-
           echo "--- Git Repository Status in CI Environment ---"
           git status
           echo "--- Git Tracked Files (Verbose) ---"
           git ls-files -v
-
           echo "--- Check Critical Project Files ---"
           CRITICAL_FILES=("package.json" "astro.config.mjs" ".gitignore" "src/pages/index.astro")
           for FILE in "${CRITICAL_FILES[@]}"; do
@@ -53,11 +46,9 @@ jobs:
               find . -name "$(basename "$FILE")" -print -exec ls -lha {} \; || true
             fi
           done
-
           echo "--- End Deep Initial Debug ---"
         continue-on-error: true
 
-      # 以下、既存のステップを全て残す（Setup Node.jsから最後まで）
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -65,9 +56,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./ # ← この行を追加
 
       - name: Build
         run: npm run build
+        working-directory: ./ # ← この行を追加
 
       - name: List built files
         run: ls -R ./dist
@@ -114,8 +107,7 @@ jobs:
           else
             echo "astro.config.mjs NOT found in root."
             echo "--- Search for astro.config.mjs recursively ---"
-            find . -name "astro.config.mjs"
-            echo "--- Check .gitignore for astro.config.mjs ---"
+            find . -name "$(basename "$FILE")" -print -exec ls -lha {} \; || true
             if [ -f .gitignore ]; then
               cat .gitignore | grep -i "astro.config.mjs" || echo ".gitignore does not contain astro.config.mjs explicitly."
             else
