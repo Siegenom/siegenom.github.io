@@ -15,6 +15,37 @@ jobs:
         with:
           fetch-depth: 0 # Full history for gh-pages action
 
+      # Manual Git Clone and Deep Initial Debug - 再度導入し、エラーなく詳細情報を収集
+      - name: Deep Debugging - Environment and Files Check
+        run: |
+          echo "--- Starting Deep Debugging Checks ---"
+          echo "1. Current Working Directory:"
+          pwd
+          echo "2. List Root Directory Contents (long format):"
+          ls -laR .
+          echo "3. Content of .github/workflows/deploy.yml:"
+          cat .github/workflows/deploy.yml
+          echo "4. Content of public/admin/config.yml:"
+          # config.ymlが存在しない場合のエラーを防ぐため、存在チェックを追加
+          if [ -f public/admin/config.yml ]; then
+            cat public/admin/config.yml
+          else
+            echo "public/admin/config.yml not found at this path in the current working directory."
+          fi
+          echo "5. Permissions of public/admin/config.yml (if exists):"
+          if [ -f public/admin/config.yml ]; then
+            ls -l public/admin/config.yml
+          fi
+          echo "6. Content of src/pages/admin/index.astro:"
+          if [ -f src/pages/admin/index.astro ]; then
+            cat src/pages/admin/index.astro
+          else
+            echo "src/pages/admin/index.astro not found."
+          fi
+          echo "7. Content of package.json:"
+          cat package.json
+          echo "--- Deep Debugging Checks Completed ---"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -27,6 +58,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: List built files (./dist)
+        run: ls -R ./dist
+
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/main'
@@ -35,3 +69,44 @@ jobs:
           publish_dir: ./dist
           publish_branch: gh-pages
           force_orphan: true # 毎回 gh-pages ブランチをクリーンに再構築
+
+      # デバッグ情報収集のための追加ステップ
+      - name: Debug Post-Deployment (Check gh-pages branch content)
+        run: |
+          echo "--- Post-Deployment Debugging - Checking gh-pages content ---"
+          # gh-pagesブランチがチェックアウトされていない環境で直接コンテンツを確認
+          # git fetch origin gh-pages:gh-pages || true # gh-pagesブランチがなければフェッチ
+          # git checkout gh-pages
+          # ls -laR . # gh-pagesブランチのルートディレクトリ内容
+          # echo "Content of index.html on gh-pages:"
+          # cat index.html
+          # echo "Content of admin/index.html on gh-pages:"
+          # cat admin/index.html
+          # echo "Content of admin/config.yml on gh-pages:"
+          # cat admin/config.yml
+
+          # より安全な方法で、Actions環境内で gh-pages の内容を確認
+          # GitHub Actionsが提供する一時的なワークスペースを利用し、gh-pagesの内容をフェッチ
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git fetch origin gh-pages:gh-pages || echo "gh-pages branch not found, skipping fetch."
+          
+          if git rev-parse --verify gh-pages >/dev/null 2>&1; then
+            echo "gh-pages branch found. Checking its contents."
+            mkdir temp_gh_pages_checkout
+            git worktree add temp_gh_pages_checkout gh-pages
+            echo "--- Contents of gh-pages branch (in temp_gh_pages_checkout) ---"
+            ls -laR temp_gh_pages_checkout
+            echo "--- Content of temp_gh_pages_checkout/index.html ---"
+            cat temp_gh_pages_checkout/index.html || echo "index.html not found in gh-pages root."
+            echo "--- Content of temp_gh_pages_checkout/admin/index.html ---"
+            cat temp_gh_pages_checkout/admin/index.html || echo "admin/index.html not found in gh-pages."
+            echo "--- Content of temp_gh_pages_checkout/admin/config.yml ---"
+            cat temp_gh_pages_checkout/admin/config.yml || echo "admin/config.yml not found in gh-pages."
+            git worktree remove temp_gh_pages_checkout || true
+            git branch -D gh-pages || true
+          else
+            echo "gh-pages branch not available after deploy."
+          fi
+          echo "--- Post-Deployment Debugging Completed ---"
