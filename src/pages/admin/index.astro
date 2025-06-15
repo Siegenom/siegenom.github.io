@@ -1,13 +1,13 @@
 ---
-// ここでCMSの設定を直接定義します。
-// これにより、設定がページに埋め込まれ、キャッシュの問題を完全に回避します。
+// CMSの設定をPKCEフローで直接定義します。
+// これにより、Netlifyへの不要な通信を完全に遮断し、GitHub認証を確実に行います。
 const config = {
   backend: {
     name: "github",
     repo: "siegenom/siegenom.github.io", // あなたのリポジトリ
     branch: "main",                       // メインブランチ
-    auth_type: "implicit",                // GitHubの認証方式
-    app_id: "Iv23li4MHrnyVRWN2WTm",       // あなたのGitHub OAuth AppのClient ID
+    auth_type: "pkce", // ★★★ 認証方式を 'implicit' から 'pkce' に変更 ★★★
+    app_id: "Iv23li4MHrnyVRWN2WTm", // あなたのGitHub OAuth AppのClient ID
   },
   media_folder: "public/images/blog",
   public_folder: "/images/blog",
@@ -43,7 +43,6 @@ const config = {
   <!--
     Astroの 'define:vars' を使用して、サーバーサイドで定義した 'config' オブジェクトを
     クライアントサイドのJavaScriptに安全に渡し、CMSを初期化します。
-    これにより、外部のYMLファイルへの依存がなくなり、キャッシュの問題が解決されます。
   -->
   <script define:vars={{ config }}>
     CMS.init({ config });
