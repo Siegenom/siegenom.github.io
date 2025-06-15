@@ -13,10 +13,12 @@ jobs:
       contents: write
 
     steps:
-      - name: Manual Git Clone and Deep Initial Debug # ← ステップ名を変更
+      - name: Manual Git Clone and Deep Initial Debug
         run: |
           echo "--- Starting Manual Git Clone ---"
-          git clone --depth 0 https://github.com/${{ github.repository }}.git .
+          # エラー修正: --depth 0 は無効。完全クローンには depth を指定しないか、または --depth 1 を使用。
+          # ここではまずファイル存在確認のため --depth 1 で試行
+          git clone --depth 1 https://github.com/${{ github.repository }}.git .
           echo "--- Git Clone Completed ---"
 
           echo "--- Environment Variables related to Paths ---"
@@ -40,11 +42,11 @@ jobs:
             echo "Checking file: $FILE"
             if [ -f "$FILE" ]; then
               echo "$FILE found. Details:"
-              ls -lha "$FILE" # ファイルの権限、サイズ、タイムスタンプ
+              ls -lha "$FILE"
               echo "First 20 lines of $FILE:"
               head -n 20 "$FILE"
               echo "SHA256 checksum of $FILE:"
-              sha256sum "$FILE" || true # エラーにならないように || true
+              sha256sum "$FILE" || true
             else
               echo "$FILE NOT found."
               echo "Searching for $FILE recursively from root:"
@@ -53,7 +55,7 @@ jobs:
           done
 
           echo "--- End Deep Initial Debug ---"
-        continue-on-error: true # 失敗してもログは取得
+        continue-on-error: true
 
       # 以下、既存のステップを全て残す（Setup Node.jsから最後まで）
       - name: Setup Node.js
