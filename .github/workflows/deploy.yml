@@ -13,7 +13,7 @@ jobs:
       contents: write
 
     steps:
-      - name: Manual Git Clone and Deep Initial Debug # ステップ名を維持
+      - name: Manual Git Clone and Deep Initial Debug
         run: |
           echo "--- Starting Manual Git Clone ---"
           # リポジトリをカレントディレクトリにクローン（リポジトリ名と同じディレクトリが作成される）
@@ -21,7 +21,7 @@ jobs:
           echo "--- Git Clone Completed ---"
           
           # ★修正点: クローンされたリポジトリのディレクトリへ移動
-          cd ${{ github.repository.name }}
+          cd siegenom.github.io # <--- ここが重要
           echo "--- Changed working directory to cloned repository root (${{ github.repository.name }}) ---"
 
           echo "--- Environment Variables related to Paths ---"
@@ -63,19 +63,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-        working-directory: ./ # リポジトリルートで実行
+        # ★修正点: working-directory: ./ を削除 (usesステップには適用不可)
 
       - name: Install dependencies
         run: npm install
-        working-directory: ./ # リポジトリルートで実行
+        working-directory: ./
 
       - name: Build
-        run: astro build # npm run build から astro build へ変更（より直接的）
-        working-directory: ./ # リポジトリルートで実行
+        run: astro build
+        working-directory: ./
 
       - name: List built files
         run: ls -R ./dist
-        working-directory: ./ # リポジトリルートで実行
+        working-directory: ./ # ここはrunステップなので維持
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
@@ -83,8 +83,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
           force_orphan: true
-        # peaceiris/actions-gh-pages は working-directory オプションを受け付けません。
-        # publish_dirでデプロイ元パスを指定します。
 
       - name: Debug Deployment
         run: |
@@ -105,7 +103,7 @@ jobs:
           echo "--- Comparing checksums of deployed index.html and built index.html ---"
           sha256sum index.html || true
           echo "--- End Debug Info ---"
-        working-directory: ./ # リポジトリルートで実行
+        working-directory: ./ # ここはrunステップなので維持
         continue-on-error: true
 
       - name: Display Astro Config and Debug File Presence
@@ -130,5 +128,5 @@ jobs:
             fi
           fi
           echo "--- End Astro Config Debug ---"
-        working-directory: ./ # リポジトリルートで実行
+        working-directory: ./ # ここはrunステップなので維持
         continue-on-error: true
