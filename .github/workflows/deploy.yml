@@ -16,28 +16,20 @@ jobs:
       - name: Manual Git Clone and Deep Initial Debug
         run: |
           echo "--- Starting Manual Git Clone ---"
-          # リポジトリをカレントディレクトリにクローン（リポジトリ名と同じディレクトリが作成される）
           git clone --depth 1 https://github.com/${{ github.repository }}.git .
           echo "--- Git Clone Completed ---"
-          
-          # ★修正点: クローンされたリポジトリのディレクトリへ移動
-          cd siegenom.github.io # <--- ここが重要
+          cd siegenom.github.io
           echo "--- Changed working directory to cloned repository root (${{ github.repository.name }}) ---"
-
           echo "--- Environment Variables related to Paths ---"
           env | grep -E "PATH|HOME|PWD"
-
           echo "--- Current Working Directory (Physical Path) ---"
           pwd -P
-
           echo "--- List All Contents of Current Directory (Recursive, Hidden Files) ---"
           ls -lhaR ./
-
           echo "--- Git Repository Status in CI Environment ---"
           git status
           echo "--- Git Tracked Files (Verbose) ---"
           git ls-files -v
-
           echo "--- Check Critical Project Files ---"
           CRITICAL_FILES=("package.json" "astro.config.mjs" ".gitignore" "src/pages/index.astro")
           for FILE in "${CRITICAL_FILES[@]}"; do
@@ -63,19 +55,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-        # ★修正点: working-directory: ./ を削除 (usesステップには適用不可)
 
       - name: Install dependencies
         run: npm install
         working-directory: ./
 
       - name: Build
-        run: astro build
+        run: npm run build # ← この行を astro build から npm run build に修正
         working-directory: ./
 
       - name: List built files
         run: ls -R ./dist
-        working-directory: ./ # ここはrunステップなので維持
+        working-directory: ./
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
@@ -103,7 +94,7 @@ jobs:
           echo "--- Comparing checksums of deployed index.html and built index.html ---"
           sha256sum index.html || true
           echo "--- End Debug Info ---"
-        working-directory: ./ # ここはrunステップなので維持
+        working-directory: ./
         continue-on-error: true
 
       - name: Display Astro Config and Debug File Presence
@@ -128,5 +119,5 @@ jobs:
             fi
           fi
           echo "--- End Astro Config Debug ---"
-        working-directory: ./ # ここはrunステップなので維持
+        working-directory: ./
         continue-on-error: true
