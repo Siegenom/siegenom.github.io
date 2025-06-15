@@ -3,7 +3,7 @@ backend:
   repo: siegenom/siegenom.github.io  # あなたのリポジトリ
   branch: main                      # あなたのブランチ
   auth_type: implicit               # 認証タイプ
-  app_id: Iv23li4MHrnyVRWN2WTm      # ★最重要：あなたのOAuth AppのClient ID
+  app_id: Ov23liaITErivL1rF7bJ      # ★最重要：あなたのOAuth AppのClient ID
 
 media_folder: "public/images/blog"
 public_folder: "/images/blog"
