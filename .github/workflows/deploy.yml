@@ -60,15 +60,28 @@ jobs:
           echo "--- End Debug Info ---"
         continue-on-error: true
 
-      - name: Display Astro Config # ← この新しいステップを追加
+- name: Display Astro Config and Debug File Presence
         run: |
-          echo "--- Contents of astro.config.mjs (or .ts) ---"
+          echo "--- Current Working Directory ---"
+          pwd # 現在の作業ディレクトリを表示
+          echo "--- List Root Directory Contents ---"
+          ls -lha ./ # ルートディレクトリの全内容をリスト
+
+          echo "--- Check for astro.config.mjs in root ---"
           if [ -f astro.config.mjs ]; then
+            echo "astro.config.mjs found in root."
+            echo "--- Contents of astro.config.mjs ---"
             cat astro.config.mjs
-          elif [ -f astro.config.ts ]; then
-            cat astro.config.ts
           else
-            echo "Astro config file not found (astro.config.mjs or astro.config.ts)."
+            echo "astro.config.mjs NOT found in root."
+            echo "--- Search for astro.config.mjs recursively ---"
+            find . -name "astro.config.mjs" # 再帰的にファイルを検索
+            echo "--- Check .gitignore for astro.config.mjs ---"
+            if [ -f .gitignore ]; then
+              cat .gitignore | grep -i "astro.config.mjs" || echo ".gitignore does not contain astro.config.mjs explicitly."
+            else
+              echo ".gitignore file not found."
+            fi
           fi
-          echo "--- End Astro Config ---"
+          echo "--- End Astro Config Debug ---"
         continue-on-error: true
